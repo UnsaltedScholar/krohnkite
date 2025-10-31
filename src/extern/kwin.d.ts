@@ -20,7 +20,7 @@ interface KWin {
     path: string,
     interf: string,
     method: string,
-    ...args: object[]
+    ...args: any[]
   ): void;
   registerScreenEdge(edge: number, callback: Function): void;
   unregisterScreenEdge(edge: number): void;
