@@ -221,6 +221,19 @@ class TilingController {
 
   public onWindowFocused(ctx: IDriverContext, window: WindowClass) {
     window.timestamp = new Date().getTime();
+
+    try {
+      if (CONFIG && CONFIG.movePointerOnFocus) {
+        KWIN.callDBus(
+          "org.kde.kglobalaccel",               // service
+          "/component/kwin",                    // path
+          "org.kde.kglobalaccel",               // interface
+          "invokeShortcut",                     // method
+          "MoveMouseToFocus",                   // arg0: shortcut name
+          () => { /* async callback: ignore reply */ }
+        );
+      }
+    } catch (e) { }
   }
 
   public onDesktopsChanged(ctx: IDriverContext, window: WindowClass) {

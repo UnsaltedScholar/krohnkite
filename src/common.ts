@@ -186,6 +186,7 @@ interface IConfig {
   focusNormalCfg: WinTypes;
   focusNormalDisableScreens: boolean;
   focusNormalDisableVDesktops: boolean;
+  movePointerOnFocus: boolean;
   focusMetaCfg: WinTypes;
   focusMetaDisableScreens: boolean;
   focusMetaDisableVDesktops: boolean;

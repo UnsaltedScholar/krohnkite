@@ -71,6 +71,7 @@ class KWinConfig implements IConfig {
   public focusNormalDisableVDesktops: boolean;
   public focusMetaDisableScreens: boolean;
   public focusMetaDisableVDesktops: boolean;
+  public movePointerOnFocus: boolean;
   public defaultMetaConfig: { [key: string]: Shortcut };
   public metaConf: string[];
   public metaTimeout: number;
@@ -259,6 +260,10 @@ class KWinConfig implements IConfig {
     );
     this.focusNormalDisableVDesktops = KWIN.readConfig(
       "focusNormalDisableVDesktops",
+      false,
+    );
+    this.movePointerOnFocus = KWIN.readConfig(
+      "movePointerOnFocus",
       false,
     );
     this.focusMetaDisableScreens = KWIN.readConfig(
