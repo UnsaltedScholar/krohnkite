@@ -224,14 +224,8 @@ class TilingController {
 
     try {
       if (CONFIG && CONFIG.movePointerOnFocus) {
-        KWIN.callDBus(
-          "org.kde.kglobalaccel",               // service
-          "/component/kwin",                    // path
-          "org.kde.kglobalaccel",               // interface
-          "invokeShortcut",                     // method
-          "MoveMouseToFocus",                   // arg0: shortcut name
-          () => { /* async callback: ignore reply */ }
-        );
+        kwin.callDBus("org.kde.kglobalaccel", "/component/kwin",
+          "org.kde.kglobalaccel.Component.invokeShortcut", "MoveMouseToFocus");
       }
     } catch (e) { }
   }

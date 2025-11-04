@@ -27,7 +27,19 @@ interface KWin {
   registerTouchScreenEdge(edge: number, callback: Function): void;
   unregisterTouchScreenEdge(edge: number): void;
   registerUserActionsMenu(callback: Function): void;
+
 }
+// **This creates the global runtime variable** that KWin provides.
+declare const kwin: KWin;
+
+// optional convenience: also make callDBus available as a top-level function
+declare function callDBus(
+  service: string,
+  path: string,
+  interf: string,
+  method: string,
+  ...args: any[]
+): any;
 
 // interface IOptions {
 //   configChanged: QSignal;
