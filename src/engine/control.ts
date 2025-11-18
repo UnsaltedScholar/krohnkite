@@ -224,8 +224,8 @@ class TilingController {
 
     try {
       if (CONFIG && CONFIG.movePointerOnFocus) {
-        kwin.callDBus("org.kde.kglobalaccel", "/component/kwin",
-          "org.kde.kglobalaccel.Component.invokeShortcut", "MoveMouseToFocus");
+        callDBus("org.kde.kglobalaccel", "/component/kwin",
+          "org.kde.kglobalaccel.Component", "invokeShortcut", "MoveMouseToFocus");
       }
     } catch (e) { }
   }
