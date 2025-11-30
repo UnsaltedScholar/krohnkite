@@ -514,10 +514,12 @@ class KWinConfig implements IConfig {
     return layoutOrder;
   }
 
-  private static getLayoutFactories(sortedLayouts: ISortedLayouts[]): {
+  // --- REPLACED getLayoutFactories: load built-ins, then attempt to load user files ---
+  public static getLayoutFactories(sortedLayouts: ISortedLayouts[]): {
     [key: string]: () => ILayout;
   } {
     let layoutFactories: { [key: string]: () => ILayout } = {};
+    // register built-in layouts as before
     sortedLayouts.forEach(({ layoutClass, isCapacity }) => {
       if (isCapacity) {
         const capacityConfigKey = `${unCapitalize(layoutClass.id)}Capacity`;
@@ -540,8 +542,148 @@ class KWinConfig implements IConfig {
         layoutFactories[layoutClass.id] = () => new layoutClass();
       }
     });
+
+    /*
+     * Load user-specified layout files (paths declared in the UI).
+     * The UI stores newline-separated paths into key "customLayoutPaths".
+     * Each file is expected to set "layoutClass" to the layout constructor.
+     *
+     * Strategy: attempt to read file contents with several runtime helpers
+     * (readFile global, QFile+QTextStream, io.readTextFile) — whichever is
+     * present in the running environment. If none exists we warn and skip.
+     */
+    try {
+      const pathsRaw = (KWIN.readConfig("customLayoutPaths", "") as string) || "";
+      if (pathsRaw && pathsRaw.trim() !== "") {
+        const paths = pathsRaw
+          .split(/\r?\n/)
+          .map((p) => p && p.trim())
+          .filter(Boolean);
+        paths.forEach((path, idx) => {
+          try {
+            let content: string | null = null;
+
+            // 1) try a global readFile function if available
+            try {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              if (typeof (globalThis as any).readFile === "function") {
+                // @ts-ignore
+                content = (globalThis as any).readFile(path);
+              }
+            } catch (e) {
+              content = null;
+            }
+
+            // 2) try Qt's QFile + QTextStream if available (QML/Qt environments)
+            if (!content) {
+              try {
+                // @ts-ignore
+                if (typeof (globalThis as any).QFile !== "undefined") {
+                  // @ts-ignore
+                  const QFile = (globalThis as any).QFile;
+                  // @ts-ignore
+                  const QTextStream = (globalThis as any).QTextStream;
+                  // open file
+                  // @ts-ignore
+                  const f = new QFile(path);
+                  // QFile.ReadOnly | QFile.Text = 0x0001 | 0x0004 -> but we use open("r")
+                  if (f.open && f.open(QFile.ReadOnly | QFile.Text)) {
+                    // @ts-ignore
+                    const ts = new QTextStream(f);
+                    // @ts-ignore
+                    content = ts.readAll();
+                    f.close && f.close();
+                  }
+                }
+              } catch (e) {
+                content = null;
+              }
+            }
+
+            // 3) try a generic io helper if available
+            if (!content) {
+              try {
+                // @ts-ignore
+                if (typeof (globalThis as any).io !== "undefined" && typeof (globalThis as any).io.readTextFile === "function") {
+                  // @ts-ignore
+                  content = (globalThis as any).io.readTextFile(path);
+                }
+              } catch (e) {
+                content = null;
+              }
+            }
+
+            if (!content) {
+              warning(
+                `kwinconfig: cannot read custom layout file "${path}". ` +
+                  `Make sure the script has file access or paste the layout code into the configuration directly.`,
+              );
+              return;
+            }
+
+            // Execute the file content in a small wrapper that returns layoutClass.
+            // The file must assign the constructor to `layoutClass`.
+            const wrapper = `(function(){ var layoutClass = null;\n${content}\n return layoutClass; })()`;
+            let clsAny: any = null;
+            try {
+              // Evaluate in current context
+              clsAny = eval(wrapper);
+            } catch (e) {
+              warning(`kwinconfig: error evaluating custom layout file "${path}": ${e}`);
+              return;
+            }
+
+            if (typeof clsAny !== "function") {
+              warning(
+                `kwinconfig: custom layout file "${path}" did not export a layout constructor via variable "layoutClass".`,
+              );
+              return;
+            }
+
+            // Provide a default id if the class doesn't declare one.
+            if (!("id" in clsAny) || !clsAny.id) {
+              try {
+                (clsAny as any).id = String(path).split("/").pop()?.replace(/\.[^/.]+$/, "") || `custom${idx}`;
+              } catch (e) {
+                /* ignore */
+              }
+            }
+
+            const isCapacity = !!(clsAny.isCapacity || false);
+            // Register factory. If it's capacity-type, we read capacity key by id.
+            if (isCapacity) {
+              const capacityConfigKey = `${unCapitalize((clsAny as any).id)}Capacity`;
+              let capacity = validateNumber(
+                KWIN.readConfig(capacityConfigKey, 99),
+                0,
+                99,
+              );
+              if (capacity instanceof Err) {
+                warning(
+                  `kwinconfig: layout capacity for ${clsAny.id} is invalid: ${capacity}`,
+                );
+                layoutFactories[clsAny.id] = () => new clsAny(null);
+              } else if (capacity === 0 || capacity > 98) {
+                layoutFactories[clsAny.id] = () => new clsAny(null);
+              } else {
+                layoutFactories[clsAny.id] = () => new clsAny(capacity);
+              }
+            } else {
+              layoutFactories[clsAny.id] = () => new clsAny();
+            }
+          } catch (innerErr) {
+            warning(`kwinconfig: failed to load custom layout from path "${path}": ${innerErr}`);
+          }
+        });
+      }
+    } catch (outerErr) {
+      warning(`kwinconfig: error while processing customLayoutPaths: ${outerErr}`);
+    }
+
     return layoutFactories;
   }
+  // --- end replaced getLayoutFactories ---
 
   public toString(): string {
     return "Config(" + JSON.stringify(this, undefined, 2) + ")";

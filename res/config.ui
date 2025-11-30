@@ -2086,6 +2086,70 @@
             </property>
            </widget>
           </item>
+
+          <!-- === Custom Layouts group (insert inside the Layouts tab verticalLayout_4) === -->
+          <item>
+           <widget class="QGroupBox" name="GB_CustomLayouts">
+            <property name="title">
+             <string>Custom layouts</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_customLayouts">
+             <item>
+              <widget class="QLabel" name="label_customLayouts">
+               <property name="text">
+                <string>Local custom layout implementation file paths (one per line). The tiling script will attempt to read each file and load a layout constructor assigned to the variable <tt>layoutClass</tt> (see docs).</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPlainTextEdit" name="kcfg_customLayoutPaths">
+               <property name="toolTip">
+                <string>Enter one file path per line (absolute or relative). The script will attempt to read each file and register any layout constructor exported as <tt>layoutClass</tt>.</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>64</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_customLayoutsCapacity">
+               <item>
+                <widget class="QLabel" name="label_customLayoutCapacity">
+                 <property name="text">
+                  <string>Default capacity for custom layouts:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="kcfg_customLayoutCapacity">
+                 <property name="minimum">
+                  <number>0</number>
+                 </property>
+                 <property name="maximum">
+                  <number>99</number>
+                 </property>
+                 <property name="value">
+                  <number>99</number>
+                 </property>
+                 <property name="toolTip">
+                  <string>Number of tiles allowed before windows float or move; used as a default for custom layouts when no per-layout capacity key exists.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+
+            </layout>
+           </widget>
+          </item>
+          <!-- === end Custom Layouts group === -->
          </layout>
         </widget>
        </item>

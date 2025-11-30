@@ -141,6 +141,17 @@
         <default>0</default>
     </entry>
 
+    <!-- Custom layouts: paths and default capacity -->
+    <entry name="customLayoutPaths" type="String">
+        <label>Custom layout implementation file paths (one per line)</label>
+        <default></default>
+    </entry>
+
+    <entry name="customLayoutCapacity" type="Int">
+        <label>Default capacity for custom layouts (applies when a per-layout capacity key is not provided)</label>
+        <default>99</default>
+    </entry>
+
       <!-- ***************************** -->
       <!-- **********Surfaces*********** -->
       <!-- ***************************** -->
